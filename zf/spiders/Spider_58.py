@@ -35,12 +35,15 @@ class Spider_58(scrapy.Spider):
 
     def parse_list(self, response):
         links = response.xpath('//ul[@class="house-list"]/li[@class="house-cell"]/div[@class="img-list"]/a/@href')
-        # for link in links:
-        #     yield Request(link.extract(), callback=self.extract_detail)
-        link = links[0].extract()
-        matchObj = re.match(r'.*&entinfo=(.*?)&.*', link)
-        id = matchObj.group(1)
-        yield Request(link, callback=self.parse_detail, meta={'id': id})
+        for link in links:
+            url = link.extract()
+            matchObj = re.match(r'.*&entinfo=(.*?)&.*', url)
+            id = matchObj.group(1)
+            yield Request(url, callback=self.parse_detail, meta={'id': id})
+        # link = links[0].extract()
+        # matchObj = re.match(r'.*&entinfo=(.*?)&.*', link)
+        # id = matchObj.group(1)
+        # yield Request(link, callback=self.parse_detail, meta={'id': id})
 
     def parse_detail(self, response):
         id = response.meta['id']
