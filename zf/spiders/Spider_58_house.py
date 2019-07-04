@@ -1,7 +1,9 @@
 import re
 import scrapy
-from scrapy.http import Request
+import hashlib
 
+from scrapy.http import Request
+from scrapy.utils.python import to_bytes
 from zf.items import ZfItem
 
 
@@ -20,8 +22,9 @@ class Spider_58(scrapy.Spider):
         links = response.xpath('//div[@class="main"]//ul[@class="list"]/li/a/@href')
         for link in links:
             url = link.extract()
-            matchObj = re.match(r'.*tid=(.*?)', url)
-            id = matchObj.group(1)
+            matchObj = re.match(r'.*tid=(.*?)&?', url)
+            # id = matchObj.group(1)
+            id = hashlib.sha1(to_bytes(url)).hexdigest()
             yield Request(url, callback=self.parse_detail, meta={'id': id})
         # link = links[0].extract()
         # matchObj = re.match(r'.*&entinfo=(.*?)&.*', link)
@@ -41,7 +44,7 @@ class Spider_58(scrapy.Spider):
         for img_path in img_paths:
             img_src = img_path.extract()
             img_src = re.match(r'//(.*?)\?.*', img_src).group(1)
-            imgs.append(img_src)
+            imgs.append('https://' + img_src)
         item['image_urls'] = imgs
 
         # area_paths = response.xpath('//div[@class="house-basic-desc"]//li[last()-1]/span[2]/a/text()').extract()
