@@ -21,3 +21,4 @@ class ZfItem(scrapy.Item):
     image_urls = scrapy.Field()
     images = scrapy.Field()
     source = scrapy.Field()
+    addtime = scrapy.Field()

@@ -1,4 +1,6 @@
 import re
+from datetime import datetime
+
 import scrapy
 from scrapy.exceptions import DropItem
 
@@ -21,13 +23,14 @@ class Spider_58_house(scrapy.Spider):
         for i in range(1, page_count):
             page_url = "https://sz.58.com/pinpaigongyu/pn/%s/" % i
             yield Request(page_url, callback=self.parse_list)
+        # return self.parse_list(None)
 
     def parse_list(self, response):
         links = response.xpath('//div[@class="main"]//ul[@class="list"]/li/a/@href')
         for link in links:
             url = link.extract()
             yield Request(url, callback=self.parse_detail)
-        # url = links[0].extract()
+        # url = 'https://sz.58.com/pinpaigongyu/38616137526808x.shtml'
         # yield Request(url, callback=self.parse_detail)
 
     def parse_detail(self, response):
@@ -44,6 +47,10 @@ class Spider_58_house(scrapy.Spider):
         item['id'] = id
         item['source'] = '58同城-品牌公寓'
         item['name'] = response.xpath('//title/text()').extract()[0]
+        item['addtime'] = datetime.now().date()
+        date_paths = response.xpath('/html/body/div[3]/div[2]/span/text()').extract()
+        if len(date_paths) > 0:
+            item['addtime'] = str(date_paths[0]).strip().replace('更新时间：', '')
         # item['price'] = str(response.xpath('//div[@class="house-title-wrap"]//span[@class="price strongbox"]/text()').extract()[0]).strip()
         # item['housing_estate'] = str.join(' ', response.xpath('//div[@class="housedetail center cf"]//a/text()').extract())
 
