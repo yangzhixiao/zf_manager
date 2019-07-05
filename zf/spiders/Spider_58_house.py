@@ -17,9 +17,12 @@ class Spider_58_house(scrapy.Spider):
     ]
 
     def start_requests(self):
-        yield Request(self.start_urls[0], callback=self.parse)
+        page_count = 70
+        for i in range(1, page_count):
+            page_url = "https://sz.58.com/pinpaigongyu/pn/%s/" % i
+            yield Request(page_url, callback=self.parse_list)
 
-    def parse(self, response):
+    def parse_list(self, response):
         links = response.xpath('//div[@class="main"]//ul[@class="list"]/li/a/@href')
         for link in links:
             url = link.extract()
