@@ -20,3 +20,4 @@ class ZfItem(scrapy.Item):
     desc = scrapy.Field()
     image_urls = scrapy.Field()
     images = scrapy.Field()
+    source = scrapy.Field()

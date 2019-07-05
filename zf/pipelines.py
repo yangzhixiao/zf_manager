@@ -4,12 +4,11 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
+import datetime
 import hashlib
-import os
+import db
 
-import xlwt as xlwt
 from scrapy import Request
-from scrapy.exceptions import DropItem
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy.utils.python import to_bytes
 
@@ -19,21 +18,25 @@ class ZfPipeline(object):
         return item
 
 
-class Pipeline_58(object):
+class DbPipeline(object):
+
     def __init__(self):
-        self.filename = './58_houses.xls'
-        self.outputbook = xlwt.Workbook()
-        self.table = self.outputbook.add_sheet('sheet1', cell_overwrite_ok=True)
-        self.nrow = 0
+        pass
 
     def process_item(self, item, spider):
-        self.table.write(self.nrow, 0, item['name'])
-        self.table.write(self.nrow, 1, item['price'])
-
-        self.nrow += 1
+        id = item['id']
+        images = str.join(',', map(lambda i: i['path'], item['images']))
+        source = item['source']
+        addtime = datetime.datetime.now()
+        title = str(item['name']).strip()
+        db.execute(
+            'insert into house (id, title, imgs, source, addtime) values (?, ?, ?, ?, ?)',
+            id, title, images, source, addtime
+        )
+        return item
 
     def close_spider(self, spider):
-        self.outputbook.save(self.filename)
+        db.close()
 
 
 class MyImagePipeline(ImagesPipeline):

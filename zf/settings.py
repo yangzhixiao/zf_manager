@@ -67,8 +67,8 @@ COOKIES_ENABLED = True
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   # 'zf.pipelines.Pipeline_58': 1,
-   'zf.pipelines.MyImagePipeline': 2,
+   'zf.pipelines.MyImagePipeline': 1,
+   'zf.pipelines.DbPipeline': 2,
    # 'scrapy.pipelines.images.ImagesPipeline': 300,
 }
 IMAGES_STORE = './data/images/'
@@ -81,7 +81,7 @@ IMAGES_THUMBS = {
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
-#AUTOTHROTTLE_ENABLED = True
+# AUTOTHROTTLE_ENABLED = True
 # The initial download delay
 #AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies
