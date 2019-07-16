@@ -1,6 +1,15 @@
 import sqlite3
 
-conn = sqlite3.connect('./zf.db')
+
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+
+
+conn = sqlite3.connect('./zf.db', check_same_thread=False)
+conn.row_factory = dict_factory
 
 
 def query(sql, *args):
@@ -27,7 +36,8 @@ def query_count(sql, *args):
     value = cursor.fetchone()
     cursor.close()
     conn.commit()
-    return value[0]
+    keys = value.keys()
+    return value[list(keys)[0]]
 
 
 def execute(sql, *args):

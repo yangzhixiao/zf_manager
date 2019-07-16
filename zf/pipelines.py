@@ -61,11 +61,12 @@ class MyImagePipeline(ImagesPipeline):
                 checksum = md5sum(buf)
             width, height = image.size
 
-            if (width > 600 or width == 200) and (height > 600 or height == 200):
+            if (width > 600 and height > 600) or (width == 200 or height == 200):
                 self.store.persist_file(
                     path, buf, info,
                     meta={'width': width, 'height': height},
                     headers={'Content-Type': 'image/jpeg'})
+                return checksum
             else:
                 return None
         return checksum
