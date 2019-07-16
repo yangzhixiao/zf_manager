@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import hashlib
+import os
 
 from scrapy.utils.misc import md5sum
 
@@ -61,11 +62,19 @@ class MyImagePipeline(ImagesPipeline):
                 checksum = md5sum(buf)
             width, height = image.size
 
-            if (width > 600 and height > 600) or (width == 200 or height == 200):
+            if width > 600 and height > 600:
                 self.store.persist_file(
                     path, buf, info,
                     meta={'width': width, 'height': height},
                     headers={'Content-Type': 'image/jpeg'})
+                thumb = image.copy()
+                thumb.thumbnail((200, 200))
+                p = path.replace('.jpg', '_thumb.jpg')
+                p = os.path.join(os.path.abspath('./data/images'), p)
+                p = os.path.abspath(p)
+                p, filename = os.path.split(p)[0], os.path.split(p)[1]
+                os.makedirs(p, exist_ok=True)
+                thumb.save(os.path.join(p, filename), 'JPEG')
                 return checksum
             else:
                 return None
