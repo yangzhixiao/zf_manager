@@ -19,7 +19,7 @@ class Spider_58_house(scrapy.Spider):
     ]
 
     def start_requests(self):
-        page_count = 70
+        page_count = 2
         for i in range(1, page_count):
             page_url = "https://sz.58.com/pinpaigongyu/pn/%s/" % i
             yield Request(page_url, callback=self.parse_list)
@@ -41,6 +41,7 @@ class Spider_58_house(scrapy.Spider):
 
         num = db.query_count('select count(*) from house where id=?', id)
         if num > 0:
+            db.execute('update house set updatetime=? where id=?', datetime.now().date(), id)
             raise DropItem("Duplicate item found: %s" % id)
 
         item = ZfItem()

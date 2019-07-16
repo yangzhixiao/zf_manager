@@ -28,12 +28,14 @@ class DbPipeline(object):
     def process_item(self, item, spider):
         id = item['id']
         images = str.join(',', map(lambda i: i['path'], filter(lambda i: i['checksum'] is not None, item['images'])))
+        if len(images) == 0 or images is None:
+            return item 
         source = item['source']
         addtime = item['addtime']
         title = str(item['name']).strip()
         db.execute(
-            'insert into house (id, title, imgs, source, addtime) values (?, ?, ?, ?, ?)',
-            id, title, images, source, addtime
+            'insert into house (id, title, imgs, source, addtime, updatetime) values (?, ?, ?, ?, ?, ?)',
+            id, title, images, source, addtime, addtime
         )
         return item
 
@@ -59,7 +61,7 @@ class MyImagePipeline(ImagesPipeline):
                 checksum = md5sum(buf)
             width, height = image.size
 
-            if (width > 600 or width == 200) or (height > 600 or height == 200):
+            if (width > 600 or width == 200) and (height > 600 or height == 200):
                 self.store.persist_file(
                     path, buf, info,
                     meta={'width': width, 'height': height},
