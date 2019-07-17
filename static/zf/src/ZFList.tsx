@@ -75,6 +75,7 @@ export default class ZFList extends React.Component<any, any> {
   public fetchData = async () => {
     this.setState({ loading: true })
     const ret = await fetch(DOMAIN + '/api/list')
-    this.setState({ data: ret, loading: false })
+    const data = await ret.json()
+    this.setState({ data: data, loading: false })
   }
 }
