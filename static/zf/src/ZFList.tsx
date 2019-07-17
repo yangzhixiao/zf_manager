@@ -33,17 +33,17 @@ export default class ZFList extends React.Component<any, any> {
                   <div style={{lineHeight: '20px', marginBottom: '5px', marginLeft: '10px'}}>
                     {`${r.updatetime} ${r.title}`}
                   </div>
-                  {r.imgs && r.imgs.split(',').map((i: string) => 
+                  {r.imgs && r.imgs.split(',').map((img: string, i: number) => 
                     <a
-                      key={i}
-                      href={DOMAIN + '/static/images/' + i}
+                      key={img + '-' + i}
+                      href={DOMAIN + '/static/images/' + img}
                       target='_blank'
                       rel="noopener noreferrer"
                     >
                       <img
                         style={{margin: '5px'}}
-                        alt={i}
-                        src={DOMAIN + '/static/images/' + i.replace('.jpg', '_thumb.jpg')} 
+                        alt={img}
+                        src={DOMAIN + '/static/images/' + img.replace('.jpg', '_thumb.jpg')} 
                       />
                     </a>
                   )}
