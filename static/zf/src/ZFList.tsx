@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Table, Button } from 'antd'
-import data from './mock.json'
 
-const DOMAIN = 'http://localhost:5000'
+const DOMAIN = ''
+// const DOMAIN = 'http://localhost:5000'
 
 export default class ZFList extends React.Component<any, any> {
 
