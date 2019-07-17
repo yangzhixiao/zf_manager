@@ -2,29 +2,19 @@ import os
 import zipfile
 from io import BytesIO
 
-from flask import Flask, jsonify, send_file, url_for, Response
+from flask import Flask, jsonify, send_file
 import db
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
 
-def root_dir():
-    return os.path.abspath('./static/')
-
-
-def get_file(filename):
-    try:
-        src = os.path.join(root_dir(), filename)
-        return open(src).read()
-    except IOError as exc:
-        return str(exc)
-
-
-@app.route('/')
-def zf_index():
-    content = get_file('index.html')
-    return Response(content, mimetype="text/html")
+@app.after_request
+def cors(environ):
+    environ.headers['Access-Control-Allow-Origin'] = '*'
+    environ.headers['Access-Control-Allow-Method'] = '*'
+    environ.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+    return environ
 
 
 @app.route('/api/list')
