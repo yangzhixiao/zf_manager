@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Table, Button } from 'antd'
 
-const DOMAIN = 'zf-api.yangzhixiao.top'
+const DOMAIN = 'http://zf-api.yangzhixiao.top'
 // const DOMAIN = 'http://localhost:5000'
 
 export default class ZFList extends React.Component<any, any> {
