@@ -12,8 +12,8 @@ export default class ZFList extends React.Component<any, any> {
   }
 
   public componentDidMount() {
-    // this.fetchData()
-    this.setState({ data: data })
+    this.fetchData()
+    // this.setState({ data: data })
   }
 
   public render() {
