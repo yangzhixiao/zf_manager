@@ -1,12 +1,14 @@
+import datetime
 import os
 import zipfile
 from io import BytesIO
 
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, send_file, session, request
 import db
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+app.secret_key = 'A0Zr981/3yX 6~XHH!j2N]LWX/,?R8'
 
 
 @app.after_request
@@ -17,11 +19,40 @@ def cors(environ):
     return environ
 
 
+@app.route('/api/login', methods=['POST'])
+def zf_login():
+    name = request.form['name']
+    password = request.form['password']
+    if name is None:
+        return jsonify({'success': 400, 'msg': '账户不能为空'})
+    if password is None:
+        return jsonify({'success': 400, 'msg': '密码不能为空'})
+    num = db.query_count('select count(*) from account where name=? and password=?', name, password)
+    if num > 0:
+        session['name'] = name
+        return jsonify({'success': 200, 'msg': '登录成功'})
+    return jsonify({'success': 400, 'msg': '账户不存在'})
+
+
 @app.route('/api/list')
 def zf_list():
     sql = 'select id, title, imgs, updatetime from house order by updatetime desc'
     ret = db.query(sql)
     return jsonify(ret)
+
+
+@app.route('/api/publish/<fid>')
+def zf_publish(fid):
+    try:
+        num = db.query_count('select count(*) from publish_record where fid=? and status!=?', fid, '待发布')
+        if num > 0:
+            return jsonify({'success': 400, 'msg': 'house is already published.'})
+
+        db.execute('insert into publish_record (fid, addtime, status) values (?, ?, ?)',
+                   fid, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '待发布')
+        return jsonify({'success': 200, 'msg': '发布成功'})
+    except Exception as ex:
+        return jsonify({'success': 400, 'msg': ex.__str__()})
 
 
 @app.route('/download/<fid>')

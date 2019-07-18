@@ -1,27 +1,50 @@
 import os
 import time
+import sys
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import db
 
 
-def process():
+def publish_house(fid, tid):
+    num = db.query_count('select count(*) from publish_record where fid=? and status!=?', fid, '待发布')
+    if num > 0:
+        print('house is already published.', fid)
+        db.close()
+        return
+
+    f_row = db.query_one('select * from house where id=?', fid)
+    t_row = db.query_one('select * from template where id=?', tid)
+    if f_row is None:
+        print('house not found.', fid)
+        db.close()
+        return
+
+    if t_row is None:
+        print('template not found.', tid)
+        db.close()
+        return
+
     options = Options()
-    options.add_argument('--no-sandbox')#解决DevToolsActivePort文件不存在的报错
-    options.add_argument('window-size=1920x3000') #指定浏览器分辨率
-    options.add_argument('--disable-gpu') #谷歌文档提到需要加上这个属性来规避bug
-    options.add_argument('--hide-scrollbars') #隐藏滚动条, 应对一些特殊页面
-    options.add_argument('blink-settings=imagesEnabled=false') #不加载图片, 提升速度
-    options.add_argument('--headless') #浏览器不提供可视化页面. linux下如果系统不支持可视化不加这条会启动失败
-    broswer = webdriver.Chrome(os.path.abspath('./drivers/chromedriver_linux'), options=options)
+    driver_path = './drivers/chromedriver_mac'
+    if sys.platform.startswith('linux'):
+        options.add_argument('--no-sandbox')
+        options.add_argument('window-size=1920x3000')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--hide-scrollbars')
+        options.add_argument('blink-settings=imagesEnabled=false')
+        options.add_argument('--headless')
+        driver_path = './drivers/chromedriver_linux'
+    broswer = webdriver.Chrome(os.path.abspath(driver_path), options=options)
     
-    broswer.set_page_load_timeout(20)
+    broswer.set_page_load_timeout(5)
     broswer.set_script_timeout(20)
     try:
         print('try opening website...')
         broswer.get('https://vip.anjuke.com/login/')
-    except:
-        print('timeout...stop page loading')
+    except Exception as ex:
+        print('timeout...stop page loading: ', ex.__str__())
         broswer.execute_script("window.stop()")
 
     # 切换账号密码登录
@@ -49,42 +72,42 @@ def process():
 
     # 小区名称
     print('fill community unite...')
-    broswer.find_element_by_id('community_unite').send_keys('中汇城')
+    broswer.find_element_by_id('community_unite').send_keys(t_row['community_unite'])
     time.sleep(3)
     broswer.find_element_by_xpath('//*[@id="publish_form"]/div[3]/div/ul/li[1]').click()
 
     # 室
     print('fill shi...')
-    broswer.find_element_by_name('shi').send_keys('1')
+    broswer.find_element_by_name('shi').send_keys(t_row['shi'])
 
     # 厅
     print('fill ting...')
-    broswer.find_element_by_name('ting').send_keys('1')
+    broswer.find_element_by_name('ting').send_keys(t_row['ting'])
 
     # 卫
     print('fill wei...')
-    broswer.find_element_by_name('wei').send_keys('1')
+    broswer.find_element_by_name('wei').send_keys(t_row['wei'])
 
     # 所在楼层
     print('fill current floor')
-    broswer.find_element_by_name('suoZaiLouCeng').send_keys('5')
+    broswer.find_element_by_name('suoZaiLouCeng').send_keys(t_row['suoZaiLouCeng'])
 
     # 总共楼层
     print('fill total floors')
-    broswer.find_element_by_name('zongLouCeng').send_keys('11')
+    broswer.find_element_by_name('zongLouCeng').send_keys(t_row['zongLouCeng'])
 
     # 电梯
     print('select dianti')
     broswer.find_element_by_xpath('//*[@id="publish_form"]/div[8]/label[2]').click()
 
     # 总面积
-    broswer.find_element_by_name('mianJi').send_keys('35')
+    broswer.find_element_by_name('mianJi').send_keys(t_row['mianJi'])
 
     # 已出租
-    broswer.find_element_by_name('params_101').send_keys('0')
+    broswer.find_element_by_name('params_101').send_keys(t_row['currentrent'])
 
     # 共几户
-    broswer.find_element_by_name('params_196').send_keys('2')
+    broswer.find_element_by_name('params_196').send_keys(t_row['totalrent'])
 
     # 房屋类型
     print('selectting house type...')
@@ -128,7 +151,7 @@ def process():
 
     # 价格
     print('fill price...')
-    broswer.find_element_by_name('jiaGe').send_keys('1500')
+    broswer.find_element_by_name('jiaGe').send_keys(t_row['jiaGe'])
 
     # 付款方式
     print('fill pay type...')
@@ -138,7 +161,7 @@ def process():
 
     # 标题
     print('fill title...')
-    broswer.find_element_by_name('title').send_keys('这里是标题这里是标题这里是标题这里是标题这里是标题')
+    broswer.find_element_by_name('title').send_keys(t_row['title'])
 
     # 详细介绍
     # broswer.find_element_by_name('content_fangyuanxiangqing').send_keys('这里是描述')
@@ -155,15 +178,12 @@ def process():
     print('uploading images...')
 
     # 上传室内图
-    file_path = os.path.abspath('./data/images/2019-07-06/38697195167240/99aef1d1a0b7f43ce138d167690f206a5399c003.jpg')
-    broswer.find_element_by_id('room_fileupload').send_keys(file_path)
-    file_path = os.path.abspath('./data/images/2019-07-06/38697195167240/863b66bd9453b8d31fa36056fc08d39fe98bacd6.jpg')
-    broswer.find_element_by_id('room_fileupload').send_keys(file_path)
-    file_path = os.path.abspath('./data/images/2019-07-06/38697195167240/89039b0f8a95ab6e82c493976062393c4a4f2453.jpg')
-    broswer.find_element_by_id('room_fileupload').send_keys(file_path)
+    for img in str(f_row['imgs']).split(','):
+        file_path = os.path.abspath(os.path.join('./data/images/', img))
+        broswer.find_element_by_id('room_fileupload').send_keys(file_path)
 
     # 上传户型图
-    file_path = os.path.abspath('./data/images/2019-07-16/34824689599151/a2f67dab78b86a93e1a600998d515d21229540bb.jpg')
+    file_path = os.path.abspath('./data/house_model.jpg')
     broswer.find_element_by_id('model-fileupload').send_keys(file_path)
 
     # 等待图片上传完成
@@ -180,14 +200,19 @@ def process():
     time.sleep(5)
 
     # 结果检测
-    if broswer.find_element_by_xpath('/html/body/div[4]/div[2]/dl/dd').text == '操作成功':
+    result = broswer.find_element_by_xpath('/html/body/div[4]/div[2]/dl/dd')
+    if result is not None and result.text == '操作成功':
         print('发布成功')
+        db.execute('update publish_record set status=? where fid=?', '已发布', fid)
     else:
         print('发布失败')
+        db.execute('update publish_record set status=? where fid=?', '发布失败', fid)
 
     time.sleep(3)
+    time.sleep(90000)
     broswer.quit()
 
 
 if __name__ == '__main__':
-    process()
+    if len(sys.argv) > 2:
+        publish_house(sys.argv[1], sys.argv[2])
