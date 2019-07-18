@@ -1,14 +1,24 @@
 import datetime
 import os
 import zipfile
+import _thread
 from io import BytesIO
 
 from flask import Flask, jsonify, send_file, session, request
 import db
+from send_post import publish_house
+import redis
+
+r = redis.Redis(host='yangzhixiao.top', port=6379)
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 app.secret_key = 'A0Zr981/3yX 6~XHH!j2N]LWX/,?R8'
+
+
+@app.before_first_request
+def beforerequest():
+    db.connect()
 
 
 @app.after_request
@@ -49,7 +59,8 @@ def zf_publish(fid):
             return jsonify({'success': 400, 'msg': 'house is already published.'})
 
         db.execute('insert into publish_record (fid, addtime, status) values (?, ?, ?)',
-                   fid, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '待发布')
+                   fid, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), '待发布')
+        r.publish('fid', fid)
         return jsonify({'success': 200, 'msg': '发布成功'})
     except Exception as ex:
         return jsonify({'success': 400, 'msg': ex.__str__()})
@@ -76,5 +87,25 @@ def zf_download(fid):
     return send_file(memory_file, attachment_filename=dl_name, as_attachment=True)
 
 
+@app.route('/test/publish')
+def zf_test():
+    r.publish('action', 'do it!')
+    return 'done'
+
+
+def subcribe():
+    ps = r.pubsub()
+    ps.subscribe('fid')
+    for item in ps.listen():
+        if item['data'] == 1:
+            continue
+        fid = str(item['data'], encoding='utf-8')
+        print('process item...', fid)
+        publish_house(fid, '1')
+
+
 if __name__ == '__main__':
+    _thread.start_new_thread(subcribe)
     app.run()
+    db.close()
+

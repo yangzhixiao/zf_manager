@@ -8,6 +8,7 @@ import db
 
 
 def publish_house(fid, tid):
+
     num = db.query_count('select count(*) from publish_record where fid=? and status!=?', fid, '待发布')
     if num > 0:
         print('house is already published.', fid)
@@ -25,6 +26,8 @@ def publish_house(fid, tid):
         print('template not found.', tid)
         db.close()
         return
+
+    db.execute('update publish_record set status=? where fid=?', '发布中', fid)
 
     options = Options()
     driver_path = './drivers/chromedriver_mac'
@@ -208,11 +211,12 @@ def publish_house(fid, tid):
         print('发布失败')
         db.execute('update publish_record set status=? where fid=?', '发布失败', fid)
 
+    db.close()
     time.sleep(3)
-    time.sleep(90000)
     broswer.quit()
 
 
 if __name__ == '__main__':
     if len(sys.argv) > 2:
+        db.connect()
         publish_house(sys.argv[1], sys.argv[2])
